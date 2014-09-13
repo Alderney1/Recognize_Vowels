@@ -1,0 +1,95 @@
+clear all
+close all
+
+
+%% sound record
+fs=16000;                        % sample frequency, number of samples = fs * wlen
+record_len = 128;                % length of the window for recording, time = wlen / fs 
+%n = 20*1024;
+record = wavrecord(fs*2,fs,1);   % recording the the wowel   
+
+%% plot the recording
+figure(1)
+subplot(211)
+    plot(record)
+subplot(212)
+    spectrogram(record,record_len,[],[],fs,'yaxis')
+
+
+%% load reference wowels
+
+a_ref = loadbin('wowels\a0.raw');
+
+%% plot wowels reference
+
+ref_len = 28;
+
+figure(2)
+subplot(211)
+    plot(a_ref)
+subplot(212)
+    spectrogram(a_ref,ref_len,[],[],fs,'yaxis')
+
+%% Defining of frames
+    Ns=length(record);      % number of samples
+    wlen=32e-3*fs;          % length of a frame
+    channels=1;             % channel
+    nb_coef=12;             % number of desired coeficients
+    wstep=wlen/2;           % segmentation step 
+    wind=hamming(wlen);     % window smoothing
+    x=(1:Ns)/fs;            % time axis
+    
+%% RC computing 12 coeficients for all frames
+[Cr,lpc,mfcc]=compute_12_rc_lpc_mfcc_plp(record,fs,Ns,wlen,channels,nb_coef,wstep, wind); % for the recorded signal
+[ref_Cr,ref_lpc,ref_mfcc]=compute_12_rc_lpc_mfcc_plp(a_ref,fs,Ns,wlen,channels,nb_coef,wstep, wind); % for the refernece wowels
+%% plot all RC, LPC
+figure(3)
+subplot(411)
+    plot(x,record)
+subplot(412)
+    plot(Cr(92,:))
+subplot(413)
+    plot(lpc(92,:))
+subplot(414)
+plot(mfcc(92,:))
+
+%% Cepstral distance between two utterances for mfcc
+
+threshold = 150;
+[n,m] =size(mfcc);
+vec = zeros(n,1);
+thres_vec = zeros(n,1);
+p = 11;
+for i = 1:n
+vec(i)=cd2(mfcc(1,:),mfcc(i,:),p);
+   if(vec(i) > threshold)
+       thres_vec(i) = 1;
+   else
+       thres_vec(i) = 0;
+   end;
+end
+
+figure (5)
+subplot(311)
+    plot(record)
+    title('speech signal')
+subplot(312)
+    plot(vec)
+    title('Cepstral distance between two utterances')
+subplot(313)
+    plot(thres_vec)
+    title('Active signal')
+
+
+
+
+
+%% Cepstrum of longer utterance 
+figure(4)
+ii = 2;
+jj = 6;
+
+plot(mfcc(:,ii),mfcc(:,jj),'b.-')
+hold on
+plot(ref_mfcc(:,ii),ref_mfcc(:,jj),'r.-')
+hold off

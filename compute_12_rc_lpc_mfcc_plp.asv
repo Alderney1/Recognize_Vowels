@@ -1,0 +1,11 @@
+function [Cr,lpc]=compute_12_rc_lpc_mfcc_plp(record,fs,Ns,wlen,channels,nb_coef,wstep, wind)
+% this function computing the 12 first coeficients 
+    
+%% real cepstrum   
+Cr=vrceps(record,channels,nb_coef,wlen,wstep,wind); % cumpute the 12 coeficients for all frames
+
+
+%% LPC cepstrum
+AR_order=16;        % 
+lpc=vaceps(record,channels,AR_order,nb_coef,wlen,wstep,wind); % cumpute the 12 coeficients for all frames
+
